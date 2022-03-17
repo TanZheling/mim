@@ -7,37 +7,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn.bricks import (NORM_LAYERS, DropPath, build_activation_layer,
-                             build_norm_layer)
+                             build_norm_layer,build_conv_layer)
 from mmcv.runner import BaseModule
 from mmcv.runner.base_module import ModuleList, Sequential
 
 from mmcls.models import BACKBONES
 from mmcls.models.backbones.base_backbone import BaseBackbone
-
-
-@NORM_LAYERS.register_module('LN2d')
-class LayerNorm2d(nn.LayerNorm):
-    """LayerNorm on channels for 2d images.
-
-    Args:
-        num_channels (int): The number of channels of the input tensor.
-        eps (float): a value added to the denominator for numerical stability.
-            Defaults to 1e-5.
-        elementwise_affine (bool): a boolean value that when set to ``True``,
-            this module has learnable per-element affine parameters initialized
-            to ones (for weights) and zeros (for biases). Defaults to True.
-    """
-
-    def __init__(self, num_channels: int, **kwargs) -> None:
-        super().__init__(num_channels, **kwargs)
-        self.num_channels = self.normalized_shape[0]
-
-    def forward(self, x):
-        assert x.dim() == 4, 'LayerNorm2d only supports inputs with shape ' \
-            f'(N, C, H, W), but got tensor with shape {x.shape}'
-        return F.layer_norm(
-            x.permute(0, 2, 3, 1), self.normalized_shape, self.weight,
-            self.bias, self.eps).permute(0, 3, 1, 2)
 
 
 class ConvNeXtBlock(BaseModule):
@@ -73,18 +48,21 @@ class ConvNeXtBlock(BaseModule):
     def __init__(self,
                  in_channels,
                  norm_cfg=dict(type='LN2d', eps=1e-6),
+                 conv_cfg=None,
                  act_cfg=dict(type='GELU'),
                  mlp_ratio=4.,
                  linear_pw_conv=True,
                  drop_path_rate=0.,
                  layer_scale_init_value=1e-6):
         super().__init__()
-        self.depthwise_conv = nn.Conv2d(
+        self.depthwise_conv = build_conv_layer(
+            conv_cfg,
             in_channels,
             in_channels,
             kernel_size=7,
             padding=3,
-            groups=in_channels)
+            groups=in_channels
+            )
 
         self.linear_pw_conv = linear_pw_conv
         self.norm = build_norm_layer(norm_cfg, in_channels)[1]
@@ -93,12 +71,26 @@ class ConvNeXtBlock(BaseModule):
         if self.linear_pw_conv:
             # Use linear layer to do pointwise conv.
             pw_conv = nn.Linear
+            self.pointwise_conv1 = pw_conv(in_channels, mid_channels)
+            self.pointwise_conv2 = pw_conv(mid_channels, in_channels)
         else:
             pw_conv = partial(nn.Conv2d, kernel_size=1)
+            self.pointwise_conv1 = build_conv_layer(
+            conv_cfg,
+            in_channels,
+            mid_channels,
+            kernel_size=1,
+            )
+            self.pointwise_conv2 = build_conv_layer(
+            conv_cfg,
+            mid_channels,
+            in_channels,
+            kernel_size=1,
+            )
 
-        self.pointwise_conv1 = pw_conv(in_channels, mid_channels)
+        #self.pointwise_conv1 = pw_conv(in_channels, mid_channels)
         self.act = build_activation_layer(act_cfg)
-        self.pointwise_conv2 = pw_conv(mid_channels, in_channels)
+        #self.pointwise_conv2 = pw_conv(mid_channels, in_channels)
 
         self.gamma = nn.Parameter(
             layer_scale_init_value * torch.ones((in_channels)),
@@ -129,7 +121,7 @@ class ConvNeXtBlock(BaseModule):
         return x
 
 
-@BACKBONES.register_module()
+@BACKBONES.register_module('ConvNeXttent')
 class ConvNeXt(BaseBackbone):
     """ConvNeXt.
 
@@ -199,6 +191,7 @@ class ConvNeXt(BaseBackbone):
                  in_channels=3,
                  stem_patch_size=4,
                  norm_cfg=dict(type='LN2d', eps=1e-6),
+                 conv_cfg=None,
                  act_cfg=dict(type='GELU'),
                  linear_pw_conv=True,
                  drop_path_rate=0.,
@@ -253,11 +246,13 @@ class ConvNeXt(BaseBackbone):
         # 4 downsample layers between stages, including the stem layer.
         self.downsample_layers = ModuleList()
         stem = nn.Sequential(
-            nn.Conv2d(
-                in_channels,
-                self.channels[0],
-                kernel_size=stem_patch_size,
-                stride=stem_patch_size),
+            build_conv_layer(
+            conv_cfg,
+            in_channels,
+            self.channels[0],
+            kernel_size=stem_patch_size,
+            stride=stem_patch_size
+            ),
             build_norm_layer(norm_cfg, self.channels[0])[1],
         )
         self.downsample_layers.append(stem)
@@ -272,12 +267,14 @@ class ConvNeXt(BaseBackbone):
 
             if i >= 1:
                 downsample_layer = nn.Sequential(
-                    LayerNorm2d(self.channels[i - 1]),
-                    nn.Conv2d(
+                    build_norm_layer(norm_cfg, self.channels[i - 1])[1],
+                    build_conv_layer(
+                        conv_cfg,
                         self.channels[i - 1],
                         channels,
                         kernel_size=2,
-                        stride=2),
+                        stride=2
+                        )
                 )
                 self.downsample_layers.append(downsample_layer)
 
@@ -286,6 +283,7 @@ class ConvNeXt(BaseBackbone):
                     in_channels=channels,
                     drop_path_rate=dpr[block_idx + j],
                     norm_cfg=norm_cfg,
+                    conv_cfg=conv_cfg,
                     act_cfg=act_cfg,
                     linear_pw_conv=linear_pw_conv,
                     layer_scale_init_value=layer_scale_init_value)

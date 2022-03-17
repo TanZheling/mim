@@ -1,8 +1,8 @@
 # Model settings
 model = dict(
-    type='ImageClassifier',
+    type='imageClassifier',
     backbone=dict(
-        type='ConvNeXt',
+        type='ConvNeXttent',
         arch='tiny',
         out_indices=(3, ),
         drop_path_rate=0.1,
@@ -16,8 +16,8 @@ model = dict(
             dict(type='Constant', layer=['LayerNorm'], val=1., bias=0.),
         ]),
     head=dict(
-        type='LinearClsHead',
+        type='linearClsHead',
         num_classes=1000,
         in_channels=768,
-        loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+        loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
     ))

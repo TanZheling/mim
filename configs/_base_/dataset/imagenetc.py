@@ -2,7 +2,7 @@
 dataset_type = 'ImageNetC'
 data_prefix = '/run/determined/workdir/datasets/imagenet-c'
 corruption = 'shot_noise'
-severity = 3
+severity = 5
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)

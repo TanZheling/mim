@@ -24,10 +24,10 @@ img_aug = ['weak', 'strong'][0]
 model = dict(
     backbone=dict(
         conv_cfg=dict(type='Conv', requires_grad=False),
-        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_cfg=dict(type='BN', requires_grad=False),
     ),
     head=dict(
-        num_classes=10, topk=(1,),
+        num_classes=10, topk=(1,),requires_grad=True,
         loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
         cal_acc=True
     )

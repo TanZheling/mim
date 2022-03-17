@@ -30,6 +30,7 @@ class linearClsHead(LinearClsHead):
 
     def simple_test(self, img, without_softmax=False, **kwargs):
         """Test without augmentation."""
+        img = self.pre_logits(img)
         cls_score = self.fc(img)
         if isinstance(cls_score, list):
             cls_score = sum(cls_score) / float(len(cls_score))

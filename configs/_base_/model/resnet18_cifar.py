@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='ImageClassifier',
+    type='imageClassifier',
     backbone=dict(
         type='ResNet_CIFAR',
         depth=18,

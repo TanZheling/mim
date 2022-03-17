@@ -28,11 +28,12 @@ img_aug = ['weak', 'strong'][0]
 
 model = dict(
     backbone=dict(
-        conv_cfg=dict(type='Conv', requires_grad=True),
-        norm_cfg=dict(type='BN', requires_grad=True),
+        conv_cfg=dict(type='Conv', requires_grad=False),
+        norm_cfg=dict(type='LN2d', requires_grad=False),
     ),
     head=dict(
         num_classes=10, topk=(1,),
+        requires_grad=False,
         loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
         cal_acc=True
     )
@@ -98,4 +99,4 @@ log_config = dict(
     ]
 )
 
-load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/conv-t.pth'
+load_from = 'https://download.openmmlab.com/mmclassification/v0/convnext/convnext-tiny_3rdparty_32xb128_in1k_20220124-18abde00.pth'

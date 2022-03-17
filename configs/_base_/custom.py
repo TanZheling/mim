@@ -5,5 +5,6 @@ custom_imports = dict(imports=[
   #  'tools.softmax_entropy_loss',
     #'tools.cifar',
   #  'tools.tent',
-   # 'tools.resnet_cifar'
+    'tools.convnext',
+    'tools.image_classifier'
 ], allow_failed_imports=False)
