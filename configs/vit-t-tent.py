@@ -1,6 +1,6 @@
 _base_ = [
     './_base_/custom.py',
-    './_base_/model/convnext-t.py', 
+    './_base_/model/vit-b.py', 
     './_base_/dataset/imagenetc.py',
     './_base_/default_runtime.py'
 ]
@@ -30,15 +30,14 @@ img_aug = ['weak', 'strong'][0]
 
 model = dict(
     backbone=dict(
-        conv_cfg=dict(type='Conv', requires_grad=False),
-        norm_cfg=dict(type='LN2d', requires_grad=False),
-        linear_grad=False,
-        gamma_grad=False,
+        layer_cfgs=dict(fnn_grad=True,
+                 att_grad=True,)
+            
     ),
     head=dict(
-        num_classes=1000, topk=(1,),
+        num_classes=1000,
         requires_grad=False,
-        loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
+        topk=(1,),
         cal_acc=True
     )
 )
@@ -97,10 +96,10 @@ log_config = dict(
             init_kwargs=dict(
                 project='transformer',
                 entity='zlt', 
-                name='tent-convnext-img-c-{}-{}'.format(corruption,severity)
+                name='tent-vit-b-img-c-{}-{}'.format(corruption,severity)
             )
         )
     ]
 )
 
-load_from = 'https://download.openmmlab.com/mmclassification/v0/convnext/convnext-tiny_3rdparty_32xb128_in1k_20220124-18abde00.pth'
+load_from = 'https://download.openmmlab.com/mmclassification/v0/vit/finetune/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'

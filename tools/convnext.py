@@ -49,6 +49,8 @@ class ConvNeXtBlock(BaseModule):
                  in_channels,
                  norm_cfg=dict(type='LN2d', eps=1e-6),
                  conv_cfg=None,
+                 linear_grad=True,
+                 gamma_grad=True,
                  act_cfg=dict(type='GELU'),
                  mlp_ratio=4.,
                  linear_pw_conv=True,
@@ -73,6 +75,11 @@ class ConvNeXtBlock(BaseModule):
             pw_conv = nn.Linear
             self.pointwise_conv1 = pw_conv(in_channels, mid_channels)
             self.pointwise_conv2 = pw_conv(mid_channels, in_channels)
+            if not linear_grad:
+                for param in self.pointwise_conv1.parameters():
+                    param.requires_grad = False
+                for param in self.pointwise_conv2.parameters():
+                    param.requires_grad = False
         else:
             pw_conv = partial(nn.Conv2d, kernel_size=1)
             self.pointwise_conv1 = build_conv_layer(
@@ -94,7 +101,7 @@ class ConvNeXtBlock(BaseModule):
 
         self.gamma = nn.Parameter(
             layer_scale_init_value * torch.ones((in_channels)),
-            requires_grad=True) if layer_scale_init_value > 0 else None
+            requires_grad=gamma_grad) if layer_scale_init_value > 0 else None
 
         self.drop_path = DropPath(
             drop_path_rate) if drop_path_rate > 0. else nn.Identity()
@@ -193,6 +200,8 @@ class ConvNeXt(BaseBackbone):
                  norm_cfg=dict(type='LN2d', eps=1e-6),
                  conv_cfg=None,
                  act_cfg=dict(type='GELU'),
+                 linear_grad=True,
+                 gamma_grad=True,
                  linear_pw_conv=True,
                  drop_path_rate=0.,
                  layer_scale_init_value=1e-6,
@@ -285,6 +294,8 @@ class ConvNeXt(BaseBackbone):
                     norm_cfg=norm_cfg,
                     conv_cfg=conv_cfg,
                     act_cfg=act_cfg,
+                    linear_grad=linear_grad,
+                    gamma_grad=gamma_grad,
                     linear_pw_conv=linear_pw_conv,
                     layer_scale_init_value=layer_scale_init_value)
                 for j in range(depth)

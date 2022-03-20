@@ -1,6 +1,6 @@
 import torch.nn.functional as F
 from mmcls.models.heads import LinearClsHead
-from mmcls.models.builder import HEADS
+from mmcls.models.builder import HEADS 
 
 @HEADS.register_module()
 class linearClsHead(LinearClsHead):

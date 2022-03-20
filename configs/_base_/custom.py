@@ -6,5 +6,7 @@ custom_imports = dict(imports=[
     #'tools.cifar',
   #  'tools.tent',
     'tools.convnext',
+    'tools.vit',
+    'tools.vision_transformer_head',
     'tools.image_classifier'
 ], allow_failed_imports=False)

@@ -1,11 +1,11 @@
 # Model settings
 model = dict(
-    type='imageClassifier',
+    type='ImageClassifier',
     backbone=dict(
         type='ConvNeXttent',
-        arch='tiny',
+        arch='small',
         out_indices=(3, ),
-        drop_path_rate=0.1,
+        drop_path_rate=0.4,
         gap_before_final_norm=True,
         init_cfg=[
             dict(

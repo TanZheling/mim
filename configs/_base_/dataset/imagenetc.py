@@ -1,7 +1,7 @@
 # dataset settings
 dataset_type = 'ImageNetC'
 data_prefix = '/run/determined/workdir/datasets/imagenet-c'
-corruption = 'shot_noise'
+corruption = 'elastic_transform'
 severity = 5
 
 img_norm_cfg = dict(
