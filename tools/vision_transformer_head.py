@@ -107,7 +107,8 @@ class visionTransformerClsHead(VisionTransformerClsHead):
         """
         x = self.pre_logits(x)
         cls_score = self.layers.head(x)
-
+        if isinstance(cls_score, list):
+            cls_score = sum(cls_score) / float(len(cls_score))
         if softmax:
             pred = (
                 F.softmax(cls_score, dim=1) if cls_score is not None else None)

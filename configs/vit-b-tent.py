@@ -1,34 +1,44 @@
 _base_ = [
     './_base_/custom.py',
-    './_base_/model/resnet18_cifar.py', 
-    './_base_/dataset/cifar10c_bs16.py',
+    './_base_/model/vit-b.py', 
+    './_base_/dataset/imagenetc.py',
     './_base_/default_runtime.py'
 ]
-data = dict(
-    samples_per_gpu=128, # samples_per_gpu=64 for 4 gpus
-    workers_per_gpu=2,
-)
+
+corruption = 'defocus_blur'
+severity = 5
+batch_size = 64
+data = dict(samples_per_gpu=batch_size)
+
+
+
+custom_hooks = [dict(type='EMAHook', momentum=4e-5, priority='ABOVE_NORMAL')]
+
+
 
 # test-time setting
 mode = ['entropy', 'contrast', 'cls'][0]
 aug_type = ['NoAug', 'FlCrAug', 'moco1Aug', 'selfT.2.10'][0]
 repeat = 1
-reset = [None, 'batch', 'sample'][1]
+reset = [None, 'batch', 'sample'][0]
 
 # entropy setting
 entropy_weight = 1
 entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
-
+fnn=True
+att=True
 model = dict(
     backbone=dict(
-        conv_cfg=dict(type='Conv', requires_grad=False),
-        norm_cfg=dict(type='BN', requires_grad=False),
+        layer_cfgs=dict(fnn_grad=fnn,
+                 att_grad=att,)
+            
     ),
     head=dict(
-        num_classes=10, topk=(1,),requires_grad=True,
-        loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
+        num_classes=1000,
+        requires_grad=False,
+        topk=(1,),
         cal_acc=True
     )
 )
@@ -56,7 +66,8 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-optimizer = dict(type='SGD', lr=1e-9,momentum=0.9,weight_decay=1e-4)
+lr=5e-3
+optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
 
 optimizer_config = dict(
     type='TentOptimizerHook',
@@ -85,12 +96,12 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='transformer',
+                project='benchmark',
                 entity='zlt', 
-                name='tent-res18-cifar10'
+                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}'.format(batch_size,lr,fnn,att)
             )
         )
     ]
 )
-
-load_from = '/run/determined/workdir/scratch/mmclassification/mywork/resnet18.pth'
+#load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
+load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'

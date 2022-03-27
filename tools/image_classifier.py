@@ -33,9 +33,10 @@ class imageClassifier(ImageClassifier):
 
         return losses
 
-    def simple_test(self, img, **kwargs):
+    def simple_test(self, img, img_metas, **kwargs):
         """Test without augmentation."""
         self.feat = self.extract_feat(img)
+
         #self.feat_dims = len(self.feat.shape)
         #if self.feat_dims == 1:
         #    self.feat.unsqueeze_(0)

@@ -5,10 +5,10 @@ _base_ = [
     './_base_/default_runtime.py'
 ]
 
-corruption = 'elastic_transform'
+corruption = 'glass_blur'
 severity = 5
-
-data = dict(samples_per_gpu=64)
+batch_size=64
+data = dict(samples_per_gpu=batch_size)
 
 
 
@@ -30,10 +30,10 @@ img_aug = ['weak', 'strong'][0]
 
 model = dict(
     backbone=dict(
-        conv_cfg=dict(type='Conv', requires_grad=False),
-        norm_cfg=dict(type='LN2d', requires_grad=False),
-        linear_grad=False,
-        gamma_grad=False,
+        conv_cfg=dict(type='Conv', requires_grad=True),
+        norm_cfg=dict(type='LN2d', requires_grad=True),
+        linear_grad=True,
+        gamma_grad=True,
     ),
     head=dict(
         num_classes=1000, topk=(1,),
@@ -66,7 +66,8 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-optimizer = dict(type='Adam', lr=1e-5, betas=(0.9, 0.999), weight_decay=0)
+lr=1e-4
+optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
 
 optimizer_config = dict(
     type='TentOptimizerHook',
@@ -95,9 +96,9 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='transformer',
+                project='benchmark',
                 entity='zlt', 
-                name='tent-convnext-img-c-{}-{}'.format(corruption,severity)
+                name='tent-convnext-img-c-bs{}-lr{}'.format(batch_size,lr)
             )
         )
     ]

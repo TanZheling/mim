@@ -195,6 +195,7 @@ class VisionTransformer(BaseBackbone):
                  interpolate_mode='bicubic',
                  patch_cfg=dict(),
                  layer_cfgs=dict(), #if control some of the layers in tent, change this
+                 individual=False, #true if control only few layers
                  init_cfg=None):
         super(VisionTransformer, self).__init__(init_cfg)
 
@@ -252,8 +253,20 @@ class VisionTransformer(BaseBackbone):
         dpr = np.linspace(0, drop_path_rate, self.arch_settings['num_layers'])
 
         self.layers = ModuleList()
-        if isinstance(layer_cfgs, dict):
-            layer_cfgs = [layer_cfgs] * self.num_layers
+        if individual:
+            custom_cfgs=dict(fnn_grad=True,
+                 att_grad=True)
+            if isinstance(layer_cfgs, dict):
+                layer_cfg = [custom_cfgs] * self.num_layers
+                for i in layer_cfgs['fnn_grad']:
+                    layer_cfg[i]['fnn_grad']=False
+                for i in layer_cfgs['att_grad']:
+                    layer_cfg[i]['att_grad']=False 
+                layer_cfgs = layer_cfg
+                print(layer_cfgs)
+        else:
+            if isinstance(layer_cfgs, dict):
+                layer_cfgs = [layer_cfgs] * self.num_layers
         for i in range(self.num_layers):
             _layer_cfg = dict(
                 embed_dims=self.embed_dims,

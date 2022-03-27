@@ -5,10 +5,10 @@ _base_ = [
     './_base_/default_runtime.py'
 ]
 
-corruption = 'elastic_transform'
+corruption = 'defocus_blur'
 severity = 5
-
-data = dict(samples_per_gpu=64)
+batch_size=64
+data = dict(samples_per_gpu=batch_size)
 
 
 
@@ -27,11 +27,12 @@ entropy_weight = 1
 entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
-
+fnn=False
+att=True
 model = dict(
     backbone=dict(
-        layer_cfgs=dict(fnn_grad=True,
-                 att_grad=True,)
+        layer_cfgs=dict(fnn_grad=fnn,
+                 att_grad=att,)
             
     ),
     head=dict(
@@ -65,7 +66,8 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-optimizer = dict(type='Adam', lr=1e-5, betas=(0.9, 0.999), weight_decay=0)
+lr=5e-3
+optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
 
 optimizer_config = dict(
     type='TentOptimizerHook',
@@ -94,12 +96,12 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='transformer',
+                project='tent',
                 entity='zlt', 
-                name='tent-vit-b-img-c-{}-{}'.format(corruption,severity)
+                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}'.format(batch_size,lr,fnn,att)
             )
         )
     ]
 )
-
-load_from = 'https://download.openmmlab.com/mmclassification/v0/vit/finetune/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
+#load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
+load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
