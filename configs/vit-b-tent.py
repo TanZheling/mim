@@ -7,7 +7,8 @@ _base_ = [
 
 corruption = 'defocus_blur'
 severity = 5
-batch_size = 64
+batch_size = 32
+gpu = 2
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -66,7 +67,7 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-lr=5e-3
+lr=1e-2
 optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
 
 optimizer_config = dict(
@@ -104,4 +105,5 @@ log_config = dict(
     ]
 )
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
-load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
+#load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
+load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'

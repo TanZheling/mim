@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'ImageNetC'
-data_prefix = '/run/determined/workdir/datasets/imagenet-c'
+data_prefix = '/home/sjtu/scratch/zltan/datasets/imagenet-c'
 corruption = 'motion_blur'
 severity = 5
 

@@ -14,6 +14,7 @@ from mmcls.utils import get_root_logger
 from mmcls.models.utils import MultiheadAttention, PatchEmbed, to_2tuple
 from mmcls.models import BACKBONES
 from mmcls.models.backbones.base_backbone import BaseBackbone
+import copy
 
 class TransformerEncoderLayer(BaseModule):
     """Implements one encoder layer in Vision Transformer.
@@ -257,10 +258,15 @@ class VisionTransformer(BaseBackbone):
             custom_cfgs=dict(fnn_grad=True,
                  att_grad=True)
             if isinstance(layer_cfgs, dict):
-                layer_cfg = [custom_cfgs] * self.num_layers
+                layer_cfg=[]
+                for i in range(self.num_layers):
+                    layer_cfg.append(copy.deepcopy(custom_cfgs))
+                print(layer_cfg)
                 for i in layer_cfgs['fnn_grad']:
+                    print(i)
                     layer_cfg[i]['fnn_grad']=False
                 for i in layer_cfgs['att_grad']:
+                    print(i)
                     layer_cfg[i]['att_grad']=False 
                 layer_cfgs = layer_cfg
                 print(layer_cfgs)

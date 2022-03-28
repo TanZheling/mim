@@ -7,7 +7,7 @@ _base_ = [
 
 corruption = 'defocus_blur'
 severity = 5
-batch_size = 64
+batch_size = 8
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -100,10 +100,11 @@ log_config = dict(
             init_kwargs=dict(
                 project='benchmark',
                 entity='zlt', 
-                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}'.format(batch_size,lr,fnn,att)
+                name='tent-vit-b-img-c-bs{}-lr{}'.format(batch_size,lr)
             )
         )
     ]
 )
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
-load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
+#load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
+load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
