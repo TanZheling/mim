@@ -256,7 +256,8 @@ class VisionTransformer(BaseBackbone):
         self.layers = ModuleList()
         if individual:
             custom_cfgs=dict(fnn_grad=True,
-                 att_grad=True)
+                 att_grad=True,
+                 norm_cfg=(dict(type='LN', eps=1e-6)))
             if isinstance(layer_cfgs, dict):
                 layer_cfg=[]
                 for i in range(self.num_layers):
@@ -268,6 +269,9 @@ class VisionTransformer(BaseBackbone):
                 for i in layer_cfgs['att_grad']:
                     print(i)
                     layer_cfg[i]['att_grad']=False 
+                for i in layer_cfgs['norm_cfg']:
+                    print(i)
+                    layer_cfg[i]['norm_cfg']=dict(type='LN', eps=1e-6,requires_grad=False)
                 layer_cfgs = layer_cfg
                 print(layer_cfgs)
         else:

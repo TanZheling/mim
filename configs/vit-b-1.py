@@ -5,9 +5,9 @@ _base_ = [
     './_base_/default_runtime.py'
 ]
 
-corruption = 'impulse_noise'
+corruption = 'defocus_blur'
 severity = 5
-batch_size = 2
+batch_size=2
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -27,16 +27,14 @@ entropy_weight = 1
 entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
-#if requires_grad is set to False, add the layer into the list
-fnn_list=[1,2,3,4,5,6,7,8,9,10,11]
-att_list=[1,2,3,4,5,6,7,8,9,10,11]
-norm_list=[1,2,3,4,5,6,7,8,9,10,11]
+fnn=False
+att=True
+norm=True
 model = dict(
     backbone=dict(
-        individual=True,
-        layer_cfgs=dict(fnn_grad=fnn_list,
-                 att_grad=att_list,
-                 norm_cfg=norm_list)
+        layer_cfgs=dict(fnn_grad=fnn,
+                 att_grad=att,
+                 norm_cfg=dict(type='LN',requires_grad=norm))
             
     ),
     head=dict(
@@ -111,9 +109,9 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='mult-layer-vit-tent',
+                project='benchmark',
                 entity='zlt', 
-                name='tent-vit-b-img-c-bs{}-lr{}'.format(batch_size,lr)
+                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}'.format(batch_size,lr,fnn,att)
             )
         )
     ]
@@ -121,4 +119,3 @@ log_config = dict(
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
 load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
-#load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'

@@ -28,9 +28,9 @@ entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
 #if requires_grad is set to False, add the layer into the list
-fnn_list=[1,2,3,4,5,6,7,8,9,10,11]
-att_list=[1,2,3,4,5,6,7,8,9,10,11]
-norm_list=[1,2,3,4,5,6,7,8,9,10,11]
+fnn_list=[0,1,2,3,4,5,6,7,8,9,10]
+att_list=[0,1,2,3,4,5,6,7,8,9,10]
+norm_list=[0,1,2,3,4,5,6,7,8,9,10]
 model = dict(
     backbone=dict(
         individual=True,

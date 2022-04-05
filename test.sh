@@ -4,5 +4,5 @@ for c in 'defocus_blur'	'pixelate' 'glass_blur' \
             'zoom_blur'	'gaussian_noise' 'motion_blur' 'snow'; do
 s=5;
 
-CUDA_VISIBLE_DEVICES=0 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /home/sjtu/scratch/zltan/mmclassification/tools/my_tent_train.py /home/sjtu/scratch/zltan/mim/configs/vit-t-tent.py --corruption $c --severity $s;
+CUDA_VISIBLE_DEVICES=2 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /home/sjtu/scratch/zltan/mmclassification/tools/my_tent_train.py /home/sjtu/scratch/zltan/mim/configs/vit-in.py --corruption $c --severity $s;
 done

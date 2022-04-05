@@ -1,3 +1,5 @@
+
+
 _base_ = [
     './_base_/custom.py',
     './_base_/model/vit-b.py', 
@@ -7,13 +9,13 @@ _base_ = [
 
 corruption = 'defocus_blur'
 severity = 5
-batch_size = 32
-gpu = 2
+batch_size = 2
+gpu = 1
 data = dict(samples_per_gpu=batch_size)
 
 
 
-custom_hooks = [dict(type='EMAHook', momentum=4e-5, priority='ABOVE_NORMAL')]
+#custom_hooks = [dict(type='EMAHook', momentum=4e-5, priority='ABOVE_NORMAL')]
 
 
 
@@ -28,12 +30,14 @@ entropy_weight = 1
 entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
-fnn=True
 att=True
+fnn=True
+norm=True
 model = dict(
     backbone=dict(
         layer_cfgs=dict(fnn_grad=fnn,
-                 att_grad=att,)
+                 att_grad=att,
+                 norm_cfg=dict(type='LN',requires_grad=norm))
             
     ),
     head=dict(
@@ -67,8 +71,19 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-lr=1e-2
-optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
+lr=0.00005
+wd=0.0001
+paramwise_cfg = dict(custom_keys={
+    '.cls_token': dict(decay_mult=0.0),
+    '.pos_embed': dict(decay_mult=0.0)
+})
+#optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
+optimizer = dict(
+    type='AdamW',
+    lr=lr,
+    weight_decay=wd,
+    paramwise_cfg=paramwise_cfg,
+)
 
 optimizer_config = dict(
     type='TentOptimizerHook',
@@ -86,7 +101,7 @@ optimizer_config = dict(
 )
 
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=0.0001)
+lr_config = dict(policy='CosineAnnealing', min_lr=1e-9)
 runner = dict(type='epochBasedRunner', max_epochs=1)
 
 checkpoint_config = dict(interval=20)
@@ -106,4 +121,5 @@ log_config = dict(
 )
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
-load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
+#load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
+load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'

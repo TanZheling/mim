@@ -24,7 +24,7 @@ test_pipeline = [
 
 data = dict(
     samples_per_gpu=32,
-    workers_per_gpu=4,
+    workers_per_gpu=2,
     shuffle=True,
     train=dict(
         type=dataset_type,
