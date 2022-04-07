@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 GPUS=$1
-PORT=${PORT:-29507}
+PORT=${PORT:-29508}
 
-for c in 'glass_blur'; do
+for c in 'impulse_noise'; do
 s=5;
 
 CUDA_VISIBLE_DEVICES=0,1,2,3 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \

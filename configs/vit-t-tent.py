@@ -7,7 +7,9 @@ _base_ = [
 
 corruption = 'defocus_blur'
 severity = 5
-batch_size=2
+batch_size=48
+gpu=4
+bs=batch_size*gpu
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -68,7 +70,7 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-lr=0.00005
+lr=0.0048
 wd=0.0001
 paramwise_cfg = dict(custom_keys={
     '.cls_token': dict(decay_mult=0.0),
@@ -96,10 +98,11 @@ optimizer_config = dict(
     repeat=repeat,
     augment_cfg=key_pipeline
 )
+max_epoch=24
 
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0.0001)
-runner = dict(type='epochBasedRunner', max_epochs=1)
+runner = dict(type='epochBasedRunner', max_epochs=max_epoch)
 
 checkpoint_config = dict(interval=20)
 log_config = dict(
@@ -109,9 +112,9 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='benchmark',
+                project='vit_tent_bs',
                 entity='zlt', 
-                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}'.format(batch_size,lr,fnn,att)
+                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}-gpu{}-ep{}'.format(batch_size,lr,fnn,att,gpu,max_epoch)
             )
         )
     ]

@@ -9,7 +9,7 @@ _base_ = [
 
 corruption = 'defocus_blur'
 severity = 5
-batch_size = 2
+batch_size = 16
 gpu = 1
 data = dict(samples_per_gpu=batch_size)
 
@@ -102,7 +102,7 @@ optimizer_config = dict(
 
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=1e-9)
-runner = dict(type='epochBasedRunner', max_epochs=1)
+runner = dict(type='epochBasedRunner', max_epochs=2)
 
 checkpoint_config = dict(interval=20)
 log_config = dict(
@@ -112,14 +112,14 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='benchmark',
+                project='vit_tent_bs',
                 entity='zlt', 
-                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}'.format(batch_size,lr,fnn,att)
+                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}_repeat{}'.format(batch_size,lr,fnn,att,repeat)
             )
         )
     ]
 )
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
-#load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
-load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'
+load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
+#load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'
