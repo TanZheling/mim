@@ -1,8 +1,5 @@
-for c in 'defocus_blur'	'pixelate' 'glass_blur' \
-	        'elastic_transform'	'brightness' 'fog' 'contrast' \
-    	    'frost'	'impulse_noise'	'jpeg_compression' 'shot_noise' \
-            'zoom_blur'	'gaussian_noise' 'motion_blur' 'snow'; do
-s=5;
+for l in 0.0000005 ; 
+do
 
-PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /run/determined/workdir/scratch/mmclassification/tools/my_tent_train.py /run/determined/workdir/scratch/mim/configs/convnext-t-tent-inc.py --corruption $c --severity $s;
+CUDA_VISIBLE_DEVICES=1 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /home/sjtu/scratch/zltan/mmclassification/tools/my_tent_train.py /home/sjtu/scratch/zltan/mim/configs/vit-b-tent.py --lr $l --corruption impulse_noise --severity 5;
 done

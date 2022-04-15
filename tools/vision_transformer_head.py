@@ -83,7 +83,7 @@ class visionTransformerClsHead(VisionTransformerClsHead):
             x = self.layers.pre_logits(cls_token)
             return self.layers.act(x)
 
-    def simple_test(self, x, softmax=True, post_process=True):
+    def simple_test(self, x, without_softmax=False, post_process=True):
         """Inference without augmentation.
 
         Args:
@@ -109,7 +109,7 @@ class visionTransformerClsHead(VisionTransformerClsHead):
         cls_score = self.layers.head(x)
         if isinstance(cls_score, list):
             cls_score = sum(cls_score) / float(len(cls_score))
-        if softmax:
+        if not without_softmax:
             pred = (
                 F.softmax(cls_score, dim=1) if cls_score is not None else None)
         else:

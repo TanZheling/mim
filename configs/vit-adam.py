@@ -5,9 +5,11 @@ _base_ = [
     './_base_/default_runtime.py'
 ]
 
-corruption = 'impulse_noise'
+corruption = 'defocus_blur'
 severity = 5
-batch_size = 32
+batch_size=32
+gpu=1
+bs=batch_size*gpu
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -27,16 +29,14 @@ entropy_weight = 1
 entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
-#if requires_grad is set to False, add the layer into the list
-fnn_list=[1,2,3,4,5,6,7,8,9,10,11]
-att_list=[1,2,3,4,5,6,7,8,9,10,11]
-norm_list=[1,2,3,4,5,6,7,8,9,10,11]
+att=True
+fnn=True
+norm=True
 model = dict(
     backbone=dict(
-        individual=True,
-        layer_cfgs=dict(fnn_grad=fnn_list,
-                 att_grad=att_list,
-                 norm_cfg=norm_list)
+        layer_cfgs=dict(fnn_grad=fnn,
+                 att_grad=att,
+                 norm_cfg=dict(type='LN',requires_grad=norm))
             
     ),
     head=dict(
@@ -59,7 +59,16 @@ aug_dict = {
     'FlCrAug': FlCr
 }
 
-key_pipeline = aug_dict[aug_type] + [
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+'''
+origin_pipeline = [
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='Collect', keys=['img'])
+]
+'''
+key_pipeline = aug_dict[aug_type] +  [
     dict(
         type='Normalize',
         mean=[123.675, 116.28, 103.53],
@@ -69,11 +78,12 @@ key_pipeline = aug_dict[aug_type] + [
     dict(type='Collect', keys=['img'])
 ]
 
+
+
 # optimizer
-lr=0.000005
+lr=0.00000005
 wd=0.0001
-optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
-'''paramwise_cfg = dict(custom_keys={
+paramwise_cfg = dict(custom_keys={
     '.cls_token': dict(decay_mult=0.0),
     '.pos_embed': dict(decay_mult=0.0)
 })
@@ -83,7 +93,17 @@ optimizer = dict(
     lr=lr,
     weight_decay=wd,
     paramwise_cfg=paramwise_cfg,
-)'''
+)
+optimizer_config = dict(grad_clip=dict(max_norm=1.0))
+
+# learning policy
+"""lr_config = dict(
+    policy='CosineAnnealing',
+    min_lr=0,
+    warmup='linear',
+    warmup_iters=10000,
+    warmup_ratio=1e-4,
+)"""
 
 optimizer_config = dict(
     type='TentOptimizerHook',
@@ -92,29 +112,31 @@ optimizer_config = dict(
         mode=mode,
         entropy_weight=entropy_weight,
         entropy_type=entropy_type,
-        img_aug=img_aug
+        img_aug=img_aug,
+        #origin_pipeline=origin_pipeline
     ),
     grad_clip=None,
     reset=reset,
     repeat=repeat,
     augment_cfg=key_pipeline
 )
-max_epoch=12
+max_epoch=10
+
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=1e-9)
+lr_config = dict(policy='CosineAnnealing', min_lr=0.0001)
 runner = dict(type='epochBasedRunner', max_epochs=max_epoch)
 
 checkpoint_config = dict(interval=20)
 log_config = dict(
-    interval=50,
+    interval=10,
     hooks=[
         dict(type='TextLoggerHook'),
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='layer',
+                project='normlayers',
                 entity='zlt', 
-                name='timm-bs{}-lr{}'.format(batch_size,lr)
+                name='adam-intern-b-img-c-bs{}-lr{}-ep{}'.format(batch_size,lr,max_epoch)
             )
         )
     ]

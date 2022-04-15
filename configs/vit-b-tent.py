@@ -9,7 +9,7 @@ _base_ = [
 
 corruption = 'defocus_blur'
 severity = 5
-batch_size = 16
+batch_size = 32
 gpu = 1
 data = dict(samples_per_gpu=batch_size)
 
@@ -33,6 +33,19 @@ img_aug = ['weak', 'strong'][0]
 att=True
 fnn=True
 norm=True
+grad=''
+if att:
+    grad+='T'
+else:
+    grad+='F'
+if fnn:
+    grad+='T'
+else:
+    grad+='F'
+if norm:
+    grad+='T'
+else:
+    grad+='F'
 model = dict(
     backbone=dict(
         layer_cfgs=dict(fnn_grad=fnn,
@@ -71,7 +84,9 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-lr=0.00005
+lr=0.000005
+optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
+'''
 wd=0.0001
 paramwise_cfg = dict(custom_keys={
     '.cls_token': dict(decay_mult=0.0),
@@ -84,7 +99,7 @@ optimizer = dict(
     weight_decay=wd,
     paramwise_cfg=paramwise_cfg,
 )
-
+'''
 optimizer_config = dict(
     type='TentOptimizerHook',
     optimizer_cfg=optimizer,
@@ -101,8 +116,10 @@ optimizer_config = dict(
 )
 
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=1e-9)
-runner = dict(type='epochBasedRunner', max_epochs=2)
+max_epoch=10
+cos=1e-9
+lr_config = dict(policy='CosineAnnealing', min_lr=cos)
+runner = dict(type='epochBasedRunner', max_epochs=max_epoch)
 
 checkpoint_config = dict(interval=20)
 log_config = dict(
@@ -112,14 +129,14 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='vit_tent_bs',
+                project='sgdtimm',
                 entity='zlt', 
-                name='tent-vit-b-img-c-bs{}-lr{}-fnn{}-att{}_repeat{}'.format(batch_size,lr,fnn,att,repeat)
+                name='sgd-timm-vit-b-bs{}-lr{}-gpu{}-repeat{}-cos{}-{}'.format(batch_size,lr,gpu,max_epoch,cos,grad)
             )
         )
     ]
 )
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
-load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
-#load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'
+#load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
+load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'

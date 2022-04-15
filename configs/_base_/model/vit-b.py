@@ -20,7 +20,7 @@ model = dict(
         num_classes=1000,
         in_channels=768,
         requires_grad=False,
-        loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+        loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
     ))
 '''loss=dict(
             type='LabelSmoothLoss', label_smooth_val=0.1,

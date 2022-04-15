@@ -7,7 +7,7 @@ _base_ = [
 
 corruption = 'impulse_noise'
 severity = 5
-batch_size = 2
+batch_size = 32
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -28,9 +28,9 @@ entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
 #if requires_grad is set to False, add the layer into the list
-fnn_list=[1,2,3,4,5,6,7,8,9,10,11]
-att_list=[1,2,3,4,5,6,7,8,9,10,11]
-norm_list=[1,2,3,4,5,6,7,8,9,10,11]
+fnn_list=[0,1,2,3,8,9,10,11]
+att_list=[0,1,2,3,8,9,10,11]
+norm_list=[0,1,2,3,8,9,10,11]
 model = dict(
     backbone=dict(
         individual=True,
@@ -70,9 +70,11 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-lr=0.00005
+lr=0.000005
 wd=0.0001
-paramwise_cfg = dict(custom_keys={
+optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=wd)
+
+'''paramwise_cfg = dict(custom_keys={
     '.cls_token': dict(decay_mult=0.0),
     '.pos_embed': dict(decay_mult=0.0)
 })
@@ -82,7 +84,7 @@ optimizer = dict(
     lr=lr,
     weight_decay=wd,
     paramwise_cfg=paramwise_cfg,
-)
+)'''
 
 optimizer_config = dict(
     type='TentOptimizerHook',
@@ -98,10 +100,10 @@ optimizer_config = dict(
     repeat=repeat,
     augment_cfg=key_pipeline
 )
-
+max_epoch = 12
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=0.0001)
-runner = dict(type='epochBasedRunner', max_epochs=1)
+lr_config = dict(policy='CosineAnnealing', min_lr=1e-9)
+runner = dict(type='epochBasedRunner', max_epochs=max_epoch)
 
 checkpoint_config = dict(interval=20)
 log_config = dict(
@@ -111,7 +113,7 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='mult-layer-vit-tent',
+                project='layer',
                 entity='zlt', 
                 name='tent-vit-b-img-c-bs{}-lr{}'.format(batch_size,lr)
             )
@@ -120,5 +122,5 @@ log_config = dict(
 )
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
 #load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
-load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
-#load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'
+#load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
+load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'

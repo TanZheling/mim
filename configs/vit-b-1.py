@@ -27,7 +27,7 @@ entropy_weight = 1
 entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
-fnn=False
+fnn=True
 att=True
 norm=True
 model = dict(
@@ -40,7 +40,7 @@ model = dict(
     head=dict(
         num_classes=1000,
         requires_grad=False,
-        topk=(1,),
+        topk=(1,5),
         cal_acc=True
     )
 )
@@ -70,17 +70,9 @@ key_pipeline = aug_dict[aug_type] + [
 # optimizer
 lr=0.00005
 wd=0.0001
-paramwise_cfg = dict(custom_keys={
-    '.cls_token': dict(decay_mult=0.0),
-    '.pos_embed': dict(decay_mult=0.0)
-})
-#optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
-optimizer = dict(
-    type='AdamW',
-    lr=lr,
-    weight_decay=wd,
-    paramwise_cfg=paramwise_cfg,
-)
+
+optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
+
 
 optimizer_config = dict(
     type='TentOptimizerHook',

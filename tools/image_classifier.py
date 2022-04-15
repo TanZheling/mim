@@ -4,7 +4,7 @@ import warnings
 from mmcls.models import CLASSIFIERS, build_backbone, build_head, build_neck
 from mmcls.models.utils import Augments
 from mmcls.models.classifiers import BaseClassifier, ImageClassifier
-
+import torch
 
 @CLASSIFIERS.register_module()
 class imageClassifier(ImageClassifier):
@@ -33,11 +33,26 @@ class imageClassifier(ImageClassifier):
 
         return losses
 
-    def simple_test(self, img, img_metas, **kwargs):
+    '''def extract_feat(self, img):
+        """Directly extract features from the backbone + neck."""
+        x = self.backbone(img)
+        
+        if isinstance(x, tuple):
+            self.medium_level = x
+            x = x[-1]
+            
+        else:
+            self.medium_level = (x,)
+        if self.with_neck:
+            x = self.neck(x)
+        return x'''
+
+    def simple_test(self, img, img_metas=None, **kwargs):
         """Test without augmentation."""
         self.feat = self.extract_feat(img)
-
+        if isinstance(self.feat, tuple):
+            self.feat = self.feat[0]
         #self.feat_dims = len(self.feat.shape)
         #if self.feat_dims == 1:
-        #    self.feat.unsqueeze_(0)
+            #self.feat.unsqueeze_(0)
         return self.head.simple_test(self.feat, **kwargs)
