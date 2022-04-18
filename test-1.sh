@@ -1,5 +1,5 @@
-for l in 0.000001 ; 
+for l in 'jpeg_compression' 'shot_noise' ; 
 do
 
-CUDA_VISIBLE_DEVICES=2 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /home/sjtu/scratch/zltan/mmclassification/tools/my_tent_train.py /home/sjtu/scratch/zltan/mim/configs/vit-b-tent.py --lr $l --corruption impulse_noise --severity 5;
+CUDA_VISIBLE_DEVICES=2 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /home/sjtu/scratch/zltan/mmclassification/tools/my_tent_train.py /home/sjtu/scratch/zltan/mim/configs/vit-b-tent.py  --corruption $l --severity 5;
 done

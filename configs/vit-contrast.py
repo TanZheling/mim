@@ -36,13 +36,13 @@ reset = [None, 'batch', 'sample'][0]
 # func = ['pgc', 'bankkPGC', 'best', 'bestAll', 'mocoCalib'][0]
 # CLUE = False
 # contrast setting (feat)
-projector_dim = 2048
-queue_size = 0
-aug_type = ['NoAug', 'FlClAug', 'moco1Aug', 'selfT.2.10'][1]
-contrast_weight = 10
+projector_dim = 768
+queue_size = 1600
+aug_type = ['NoAug', 'FlClAug', 'moco1Aug', 'selfT.2.10'][2]
+contrast_weight = 1
 temp = 30
 norm = ['L1Norm', 'L2Norm', 'softmax'][1]
-func = ['bank2PGC', 'best', 'bestAll', 'mocoCalib'][3]
+func = ['bank2PGC', 'best', 'bestAll', 'mocoCalib', 'moco'][4]
 CLUE = True
 
 tag = ''
@@ -67,6 +67,7 @@ moco1 =  [
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
 ]
 
+# model settings
 model = dict(
     type='imageClassifier',
     backbone=dict(
@@ -81,15 +82,24 @@ model = dict(
                 layer='Conv2d',
                 mode='fan_in',
                 nonlinearity='linear')
-        ]),
+        ],
+        layer_cfgs=dict(fnn_grad=True,
+                 att_grad=True,
+                 norm_cfg=dict(type='LN',requires_grad=True)),
+    ),
     neck=None,
     head=dict(
         type='visionTransformerClsHead',
         num_classes=1000,
         in_channels=768,
+        topk=(1,),
+        cal_acc=True,
         requires_grad=False,
         loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
     ))
+
+
+
 
 aug_dict = {
     'NoAug': [], 
@@ -112,9 +122,9 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['img']),
     dict(type='Collect', keys=['img'])
 ]
-
+lr=1e-5
 # optimizer
-optimizer = dict(type='SGD', lr=1e-3, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=lr, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(
     type='tentOptimizerHook',
     optimizer_cfg=optimizer,
@@ -140,8 +150,9 @@ optimizer_config = dict(
 # optimizer_config = dict(grad_clip=None)
 
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=0.0001)
-runner = dict(type='epochBasedRunner', max_epochs=1)
+max_epoch=1
+lr_config = dict(policy='CosineAnnealing', min_lr=1e-9)
+runner = dict(type='epochBasedRunner', max_epochs=max_epoch)
 
 checkpoint_config = dict(interval=100)
 log_config = dict(
@@ -151,9 +162,9 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='layernorm',
+                project='timmmoco',
                 entity='zlt',
-                name='_rednet26_b{}_cifar{}c_{}_{}_{}_R{}_r{}_q{}_p{}_w{}_{}{}'.format(
+                name='_vitb_timm_b{}_cifar{}c_{}_{}_{}_R{}_r{}_q{}_p{}_w{}_{}{}'.format(
                     batch_size,
                     class_num,
                     mode,

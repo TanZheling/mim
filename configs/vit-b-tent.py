@@ -116,7 +116,7 @@ optimizer_config = dict(
 )
 
 # learning policy
-max_epoch=10
+max_epoch=3
 cos=1e-9
 lr_config = dict(policy='CosineAnnealing', min_lr=cos)
 runner = dict(type='epochBasedRunner', max_epochs=max_epoch)
@@ -129,7 +129,7 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='sgdtimm',
+                project='sup-timm-sgd',
                 entity='zlt', 
                 name='sgd-timm-vit-b-bs{}-lr{}-gpu{}-repeat{}-cos{}-{}'.format(batch_size,lr,gpu,max_epoch,cos,grad)
             )

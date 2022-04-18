@@ -23,7 +23,7 @@ custom_imports = dict(imports=[
 corruption = 'fog'
 severity = 5
 batch_size = 16
-gpu = 1
+gpu = 4
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -33,7 +33,7 @@ data = dict(samples_per_gpu=batch_size)
 
 
 # test-time setting
-mode = ['entropy', 'contrast', 'cls'][2]
+mode = ['entropy', 'cls']
 aug_type = ['NoAug', 'FlCrAug', 'moco1Aug', 'selfT.2.10'][0]
 repeat = 1
 reset = [None, 'batch', 'sample'][0]
@@ -129,7 +129,7 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='cls',
+                project='cls+ent',
                 entity='zlt', 
                 name='sgd-intern-vit-b-bs{}-lr{}-gpu{}-repeat{}-cos{}'.format(batch_size,lr,gpu,max_epoch,cos)
             )

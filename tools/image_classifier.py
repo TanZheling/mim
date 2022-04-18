@@ -50,9 +50,18 @@ class imageClassifier(ImageClassifier):
     def simple_test(self, img, img_metas=None, **kwargs):
         """Test without augmentation."""
         self.feat = self.extract_feat(img)
+        #print(len(self.feat))
+        #print(type(self.feat))
+        #for o in self.feat:
+            #print(len(o))
+        #self.feature = self.feat[0][1]
         if isinstance(self.feat, tuple):
             self.feat = self.feat[0]
+            #print((self.feat[0].shape))
+            #print((self.feat[1].shape))
+            self.feature = self.feat[1]
         #self.feat_dims = len(self.feat.shape)
         #if self.feat_dims == 1:
             #self.feat.unsqueeze_(0)
+        
         return self.head.simple_test(self.feat, **kwargs)

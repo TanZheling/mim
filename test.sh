@@ -1,5 +1,5 @@
-for l in 0.00000001 0.00000005 ; 
+for l in 0.1 0.05; 
 do
 
-CUDA_VISIBLE_DEVICES=0 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /home/sjtu/scratch/zltan/mmclassification/tools/my_tent_train.py /home/sjtu/scratch/zltan/mim/configs/vit-cls.py --lr $l --corruption impulse_noise --severity 5;
+CUDA_VISIBLE_DEVICES=1 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH python /home/sjtu/scratch/zltan/mmclassification/tools/my_tent_train.py /home/sjtu/scratch/zltan/mim/configs/vit-contrast.py --lr $l  --corruption fog --severity 5;
 done

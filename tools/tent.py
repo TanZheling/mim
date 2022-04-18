@@ -136,8 +136,9 @@ class tentOptimizerHook(OptimizerHook):
         for i in range(self.repeat): #同一批数据做多次更新
             en_loss, con_loss, cls_loss = 0, 0, 0
             logits_weak = runner.model.module.head.cls_score
-            imgs_strong = self.data_aug(runner.data_batch['img_metas'].data[0], self.augment) #搞一张图片出来做增强
-            logits_strong = runner.model(img=imgs_strong, return_loss=False, without_softmax=True,post_process=False) #mmcls.models.classifiers.base forward
+            #print(len(runner.data_batch['img_metas'].data[0]))
+            imgs_strong = self.data_aug(runner.data_batch['img_metas'].data[0], self.augment) #一个batch的图片出来做增强
+            logits_strong = runner.model(img=imgs_strong, return_loss=False, without_softmax=True,post_process=False) #Nx mmcls.models.classifiers.base forward
             if 'entropy' in self.mode:
                 en_loss = self.entropy(runner, logits_weak, logits_strong) * self.entropy_weight
                 runner.log_buffer.update({'entropy_loss': en_loss.item()})
@@ -273,6 +274,11 @@ class tentOptimizerHook(OptimizerHook):
                 self.queue_all.register_buffer("queue_list", torch.randn(self.projector_dim, self.queue_size))
                 self.queue_all.queue_list = F.normalize(self.queue_all.queue_list, dim=0)
                 self.queue_all.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
+            if 'moco' in self.func:
+                self.queue_aug = nn.Module().to(self.device)
+                self.queue_aug.register_buffer("queue_list", torch.randn(self.projector_dim, self.queue_size))
+                self.queue_aug.queue_list = F.normalize(self.queue_aug.queue_list, dim=0)
+                self.queue_aug.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
             else:
                 # queue
                 self.queue_aug = nn.Module().to(self.device)
@@ -314,6 +320,8 @@ class tentOptimizerHook(OptimizerHook):
             queue.queue_list[:, ptr:ptr + 1] = key[i: i + 1].T
             ptr = (ptr + 1) % self.queue_size  # move pointer
             queue.queue_ptr[0] = ptr
+
+
 
     @torch.no_grad()
     def _momentum_update_encoder(self, modelq, modelk):
@@ -637,3 +645,42 @@ class tentOptimizerHook(OptimizerHook):
             else:
                 self.base_sums[:, c] += logits[i, :].T
                 self.cnt[c] += 1
+
+    def moco(self,runner,logits_strong):
+        imgs_meta = runner.data_batch['img_metas'].data[0]
+        img_k = self.data_aug(imgs_meta, self.augment)
+        # query: (bs x projector_dim)
+        q_c = logits_strong
+        q_f = runner.model.module.feat[1]
+        '''print(type(q_f))
+        print(type(q_f[0]))
+        print(type(q_f[1]))
+        print((q_f[0].shape))
+        print((q_f[1].shape))'''
+        with torch.no_grad():  # no gradient to keys
+            self._momentum_update_encoder(runner.model, self.encoder)
+            k_c = self.encoder(img=img_k, return_loss=False, without_softmax=True)
+            k_f = self.encoder.module.feat[1]
+        if self.norm=='L1Norm':
+            q_f = F.normalize(q_f, p=1, dim=1)
+            k_f = F.normalize(k_f, p=1, dim=1)
+        elif self.norm=='L2Norm':
+            q_f = F.normalize(q_f, p=2, dim=1)
+            k_f = F.normalize(k_f, p=2, dim=1)
+        elif self.norm=='softmax':
+            q_f = q_f.softmax(dim=1)
+            k_f = k_f.softmax(dim=1)
+        pos_k = torch.einsum('nl,nl->n', [q_f, k_f]).unsqueeze(-1)
+        neg_f_aug = self.queue_aug.queue_list.clone().detach().to(self.device)
+        neg_aug=torch.einsum('nc,ck->nk', [q_f, neg_f_aug])
+        '''print(pos_k.shape)
+        print(neg_aug.shape)'''
+        logits = torch.cat([pos_k, neg_aug], dim=1)
+        logits = nn.LogSoftmax(dim=1)(logits / self.temp)
+        marks = torch.zeros([logits.size()[0], 1 + self.queue_size]).cuda(self.device)
+        marks[:, : 1].fill_(1.0 / 1)
+
+        loss = F.kl_div(logits, marks, reduction='batchmean')
+        self._dequeue_and_enqueue_all(self.queue_aug, k_f)
+
+        return loss
