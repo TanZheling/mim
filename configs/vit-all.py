@@ -22,7 +22,7 @@ batch_size = 16
 class_num=1000
 
 # test-time setting
-mode = ['entropy', 'contrast', 'cls'][1]
+mode = ['entropy', 'contrast', 'cls']
 repeat = 1
 reset = [None, 'batch', 'sample'][0]
 
@@ -162,12 +162,11 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='mocobm',
+                project='allbm',
                 entity='zlt',
-                name='_vitb_timm_b{}_cifar{}c_{}_{}_{}_R{}_r{}_q{}_p{}_w{}_{}{}'.format(
+                name='_lr1e-6_b{}_cifar{}c_{}_{}_R{}_r{}_q{}_p{}_w{}_{}{}'.format(
                     batch_size,
                     class_num,
-                    mode,
                     func,
                     aug_type,
                     reset,

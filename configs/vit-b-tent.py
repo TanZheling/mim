@@ -10,7 +10,7 @@ _base_ = [
 corruption = 'defocus_blur'
 severity = 5
 batch_size = 32
-gpu = 1
+gpu = 4
 data = dict(samples_per_gpu=batch_size)
 
 
@@ -129,7 +129,7 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='sup-timm-sgd',
+                project='tmp',
                 entity='zlt', 
                 name='sgd-timm-vit-b-bs{}-lr{}-gpu{}-repeat{}-cos{}-{}'.format(batch_size,lr,gpu,max_epoch,cos,grad)
             )

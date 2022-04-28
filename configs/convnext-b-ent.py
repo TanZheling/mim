@@ -1,39 +1,23 @@
-
-
 _base_ = [
     './_base_/custom.py',
-    './_base_/model/vit-b.py', 
+    './_base_/model/convnext-b.py', 
     './_base_/dataset/imagenetc.py',
     './_base_/default_runtime.py'
 ]
 
-custom_imports = dict(imports=[
-    'tools.epoch_based_runner',
-    'tools.pipeline_loading',
-    'tools.linear_cls_head', 
-  #  'tools.softmax_entropy_loss',
-    #'tools.cifar',
-    'tools.tent',
-    'tools.convnext',
-    'tools.vit',
-    'tools.vision_transformer_head',
-    'tools.image_classifier'
-], allow_failed_imports=False)
-
 corruption = 'fog'
 severity = 5
-batch_size = 16
-gpu = 4
+batch_size=32
 data = dict(samples_per_gpu=batch_size)
 
 
 
-#custom_hooks = [dict(type='EMAHook', momentum=4e-5, priority='ABOVE_NORMAL')]
+custom_hooks = [dict(type='EMAHook', momentum=4e-5, priority='ABOVE_NORMAL')]
 
 
 
 # test-time setting
-mode = ['entropy', 'cls'][1]
+mode = ['entropy', 'contrast', 'cls'][0]
 aug_type = ['NoAug', 'FlCrAug', 'moco1Aug', 'selfT.2.10'][0]
 repeat = 1
 reset = [None, 'batch', 'sample'][0]
@@ -43,20 +27,18 @@ entropy_weight = 1
 entropy_type = ['entropy', 'infomax', 'memo'][0]
 img_aug = ['weak', 'strong'][0]
 
-att=True
-fnn=True
-norm=True
+
 model = dict(
     backbone=dict(
-        layer_cfgs=dict(fnn_grad=fnn,
-                 att_grad=att,
-                 norm_cfg=dict(type='LN',requires_grad=norm))
-            
+        conv_cfg=dict(type='Conv', requires_grad=True),
+        norm_cfg=dict(type='LN2d', requires_grad=True),
+        linear_grad=True,
+        gamma_grad=True,
     ),
     head=dict(
-        num_classes=1000,
+        num_classes=1000, topk=(1,),
         requires_grad=False,
-        topk=(1,),
+        loss=dict(type='SoftmaxEntropyLoss', loss_weight=1.0),
         cal_acc=True
     )
 )
@@ -84,24 +66,11 @@ key_pipeline = aug_dict[aug_type] + [
 ]
 
 # optimizer
-lr=0.00001
+lr=1e-4
 optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
-'''
-wd=0.0001
-paramwise_cfg = dict(custom_keys={
-    '.cls_token': dict(decay_mult=0.0),
-    '.pos_embed': dict(decay_mult=0.0)
-})
-#optimizer = dict(type='SGD', lr=lr, momentum=0.9,weight_decay=1e-4)
-optimizer = dict(
-    type='AdamW',
-    lr=lr,
-    weight_decay=wd,
-    paramwise_cfg=paramwise_cfg,
-)
-'''
+
 optimizer_config = dict(
-    type='tentOptimizerHook',
+    type='TentOptimizerHook',
     optimizer_cfg=optimizer,
     loss_cfg=dict(
         mode=mode,
@@ -114,11 +83,9 @@ optimizer_config = dict(
     repeat=repeat,
     augment_cfg=key_pipeline
 )
-
+max_epoch=15
 # learning policy
-max_epoch=3
-cos=1e-9
-lr_config = dict(policy='CosineAnnealing', min_lr=cos)
+lr_config = dict(policy='CosineAnnealing', min_lr=1e-9)
 runner = dict(type='epochBasedRunner', max_epochs=max_epoch)
 
 checkpoint_config = dict(interval=20)
@@ -129,14 +96,12 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='clsbs',
+                project='convnext-b-ent-test',
                 entity='zlt', 
-                name='sgd-intern-vit-b-bs{}-lr{}-gpu{}-repeat{}-cos{}'.format(batch_size,lr,gpu,max_epoch,cos)
+                name='tent-convnextb-bs{}-lr{}'.format(batch_size,lr)
             )
         )
     ]
 )
-#load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/vit-base-p16_in21k-pre-3rdparty_ft-64xb64_in1k-384_20210928-98e8652b.pth'
-#load_from = '/run/determined/workdir/scratch/bishe/pretrained_model/INTERN_models/vit-b.pth'
-#load_from = '/home/sjtu/scratch/zltan/pretrained_models/INTERN_models/vit-b.pth'
-load_from = '/home/sjtu/scratch/zltan/pretrained_models/timm_models/vit-b.pth'
+
+load_from = '/home/sjtu/scratch/zltan/pretrained_models/convnext-base_in21k-pre-3rdparty_32xb128_in1k_20220124-eb2d6ada.pth'

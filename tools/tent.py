@@ -652,11 +652,6 @@ class tentOptimizerHook(OptimizerHook):
         # query: (bs x projector_dim)
         q_c = logits_strong
         q_f = runner.model.module.feat[1]
-        '''print(type(q_f))
-        print(type(q_f[0]))
-        print(type(q_f[1]))
-        print((q_f[0].shape))
-        print((q_f[1].shape))'''
         with torch.no_grad():  # no gradient to keys
             self._momentum_update_encoder(runner.model, self.encoder)
             k_c = self.encoder(img=img_k, return_loss=False, without_softmax=True)
@@ -673,8 +668,7 @@ class tentOptimizerHook(OptimizerHook):
         pos_k = torch.einsum('nl,nl->n', [q_f, k_f]).unsqueeze(-1)
         neg_f_aug = self.queue_aug.queue_list.clone().detach().to(self.device)
         neg_aug=torch.einsum('nc,ck->nk', [q_f, neg_f_aug])
-        '''print(pos_k.shape)
-        print(neg_aug.shape)'''
+
         logits = torch.cat([pos_k, neg_aug], dim=1)
         logits = nn.LogSoftmax(dim=1)(logits / self.temp)
         marks = torch.zeros([logits.size()[0], 1 + self.queue_size]).cuda(self.device)
